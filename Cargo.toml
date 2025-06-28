@@ -1,13 +1,12 @@
 [package]
 authors     = ["Xavier Lau <x@acg.box>"]
-build       = "build.rs"
-description = "<DESCRIPTION>"
+description = "X/Twitter V2 API Library"
 edition     = "2024"
-homepage    = "https://hack.ink/<NAME>"
+homepage    = "https://hack.ink/xv2api"
 license     = "GPL-3.0"
-name        = "<NAME>"
+name        = "xv2api"
 readme      = "README.md"
-repository  = "https://github.com/hack-ink/<NAME>"
+repository  = "https://github.com/hack-ink/xv2api"
 resolver    = "3"
 version     = "0.1.0"
 
@@ -19,16 +18,13 @@ inherits    = "dev"
 inherits = "release"
 lto      = true
 
-[build-dependencies]
-# crates.io
-vergen-gitcl = { version = "1.0", features = ["cargo"] }
-
 [dependencies]
 # crates.io
-anyhow             = { version = "1.0" }
-app_dirs2          = { version = "2.5" }
-clap               = { version = "4.5", features = ["derive"] }
-color-eyre         = { version = "0.6" }
-tracing            = { version = "0.1" }
-tracing-appender   = { version = "0.2" }
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+oauth2      = { version = "5.0" }
+reqwest     = { version = "0.12", default-features = false, features = ["charset", "http2", "json", "rustls-tls"] }
+serde       = { version = "1.0" }
+serde_json  = { version = "1.0" }
+thiserror   = { version = "2.0" }
+tokio       = { version = "1.45", features = ["macros", "rt-multi-thread"] }
+tracing     = { version = "0.1" }
+urlencoding = { version = "2.1" }

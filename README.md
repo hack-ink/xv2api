@@ -1,16 +1,16 @@
 <div align="center">
 
-# <NAME>
+# xv2api
 
-### <DESCRIPTION>
+### X/Twitter V2 API Library
 
 [![License](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Docs](https://img.shields.io/docsrs/<NAME>)](https://docs.rs/<NAME>)
-[![Checks](https://github.com/hack-ink/<NAME>/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/hack-ink/<NAME>/actions/workflows/rust.yml)
-[![Release](https://github.com/hack-ink/<NAME>/actions/workflows/release.yml/badge.svg)](https://github.com/hack-ink/<NAME>/actions/workflows/release.yml)
-[![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/hack-ink/<NAME>)](https://github.com/hack-ink/<NAME>/tags)
-[![GitHub last commit](https://img.shields.io/github/last-commit/hack-ink/<NAME>?color=red&style=plastic)](https://github.com/hack-ink/<NAME>)
-[![GitHub code lines](https://tokei.rs/b1/github/hack-ink/<NAME>)](https://github.com/hack-ink/<NAME>)
+[![Docs](https://img.shields.io/docsrs/xv2api)](https://docs.rs/xv2api)
+[![Checks](https://github.com/hack-ink/xv2api/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/hack-ink/xv2api/actions/workflows/rust.yml)
+[![Release](https://github.com/hack-ink/xv2api/actions/workflows/release.yml/badge.svg)](https://github.com/hack-ink/xv2api/actions/workflows/release.yml)
+[![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/hack-ink/xv2api)](https://github.com/hack-ink/xv2api/tags)
+[![GitHub last commit](https://img.shields.io/github/last-commit/hack-ink/xv2api?color=red&style=plastic)](https://github.com/hack-ink/xv2api)
+[![GitHub code lines](https://tokei.rs/b1/github/hack-ink/xv2api)](https://github.com/hack-ink/xv2api)
 </div>
 
 ## Feature Highlights
@@ -31,8 +31,8 @@ TODO
 
 ```sh
 # Clone the repository.
-git clone https://github.com/hack-ink/<NAME>
-cd <NAME>
+git clone https://github.com/hack-ink/xv2api
+cd xv2api
 
 # To install Rust on macOS and Unix, run the following command.
 #
@@ -44,20 +44,20 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-t
 sudo apt-get update
 sudo apt-get install <DEPENDENCIES>
 
-# Build the project, and the binary will be available at `target/release/<NAME>`.
+# Build the project, and the binary will be available at `target/release/xv2api`.
 cargo build --release
 
-# If you are a macOS user and want to have a `<NAME>.app`, run the following command.
+# If you are a macOS user and want to have a `xv2api.app`, run the following command.
 # Install `cargo-bundle` to pack the binary into an app.
 cargo install cargo-bundle
-# Pack the app, and the it will be available at `target/release/bundle/osx/<NAME>.app`.
+# Pack the app, and the it will be available at `target/release/bundle/osx/xv2api.app`.
 cargo bundle --release
 ```
 
 #### Download Pre-built Binary
 
 - **macOS**
-  - Download the latest pre-built binary from [GitHub Releases](https://github.com/hack-ink/<NAME>/releases/latest).
+  - Download the latest pre-built binary from [GitHub Releases](https://github.com/hack-ink/xv2api/releases/latest).
 - **Windows**
   - TODO
 - **Unix**

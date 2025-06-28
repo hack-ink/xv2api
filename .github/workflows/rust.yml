@@ -65,6 +65,6 @@ jobs:
         if: failure()
         uses: vishnudxb/cancel-workflow@v1.2
         with:
-          repo: hack-ink/<NAME>
+          repo: hack-ink/xv2api
           workflow_id: ${{ github.run_id }}
           access_token: ${{ github.token }}

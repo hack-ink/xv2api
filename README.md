@@ -1,6 +1,6 @@
 <div align="center">
 
-# xv2api
+# XV2API
 
 ### X/Twitter V2 API Library
 
@@ -15,73 +15,97 @@
 
 ## Feature Highlights
 
-### TODO
+### 🚀 Core Features
 
-TODO
+- **OAuth 2.0 Authentication**: Secure authentication with automatic token refresh and caching
+- **Tweet Posting**: Create and publish tweets via X/Twitter V2 API
+- **Rate Limiting**: Built-in rate limit handling and error management
+- **Async/Await Support**: Fully asynchronous API built with Tokio
+- **Environment Configuration**: Easy setup using environment variables
+- **Token Management**: Automatic bearer token refresh with optional refresh token persistence
 
-## Status
+### 🛡️ Security & Reliability
 
-TODO
+- **Automatic Token Refresh**: Seamlessly handles token expiration without manual intervention
+- **Error Handling**: Comprehensive error types for different API scenarios
+- **PKCE Flow Support**: Enhanced security with Proof Key for Code Exchange
+- **TLS Security**: All requests use secure HTTPS connections with rustls
+
+### 🎯 Developer Experience
+
+- **Simple API**: Clean, intuitive interface for common X/Twitter operations
+- **Type Safety**: Full Rust type safety with serde serialization/deserialization
+- **Comprehensive Documentation**: Well-documented code with examples
+- **Environment-based Configuration**: Secure credential management
 
 ## Usage
 
-### Installation
-
-#### Build from Source
-
-```sh
-# Clone the repository.
-git clone https://github.com/hack-ink/xv2api
-cd xv2api
-
-# To install Rust on macOS and Unix, run the following command.
-#
-# To install Rust on Windows, download and run the installer from `https://rustup.rs`.
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain stable
-
-# Install the necessary dependencies. (Unix only)
-# Using Ubuntu as an example, this really depends on your distribution.
-sudo apt-get update
-sudo apt-get install <DEPENDENCIES>
-
-# Build the project, and the binary will be available at `target/release/xv2api`.
-cargo build --release
-
-# If you are a macOS user and want to have a `xv2api.app`, run the following command.
-# Install `cargo-bundle` to pack the binary into an app.
-cargo install cargo-bundle
-# Pack the app, and the it will be available at `target/release/bundle/osx/xv2api.app`.
-cargo bundle --release
-```
-
-#### Download Pre-built Binary
-
-- **macOS**
-  - Download the latest pre-built binary from [GitHub Releases](https://github.com/hack-ink/xv2api/releases/latest).
-- **Windows**
-  - TODO
-- **Unix**
-  - TODO
-
 ### Configuration
 
-#### TODO
+#### Environment Variables
 
-TODO
+Set up the required environment variables for X/Twitter API access:
 
-### Interaction
+```sh
+# Required: Your X/Twitter App Client ID and Secret
+export X_CLIENT_ID="your_client_id_here"
+export X_CLIENT_SECRET="your_client_secret_here"
 
-TODO
+# Optional: Refresh token to avoid re-authentication
+export X_REFRESH_TOKEN="your_refresh_token_here"
+```
 
-### Update
+#### Basic Example
 
-TODO
+```rust
+use xv2api::{Api, tweets::ApiTweet};
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Initialize API client from environment variables.
+    let api = Api::from_env();
+
+    // Post a tweet.
+    let resp = api.tweet("Hello from XV2API! 🦀".to_string()).await?;
+
+	println!("Response: {resp:?}");
+    println!("Tweet posted successfully!");
+
+    Ok(())
+}
+```
 
 ## Development
 
 ### Architecture
 
-TODO
+XV2API follows a modular architecture designed for extensibility and maintainability:
+
+```text
+xv2api/
+├── src/
+│   ├── lib.rs          # Main API client and core functionality
+│   ├── auth.rs         # OAuth 2.0 authentication module
+│   ├── tweets.rs       # Tweet-related API endpoints
+│   └── error.rs        # Error types and handling
+├── Cargo.toml          # Project configuration and dependencies
+└── README.md           # This documentation
+```
+
+#### Core Components
+
+- **`Api`**: Main client struct handling HTTP requests and authentication
+- **`Authenticator`**: OAuth 2.0 flow management with token caching
+- **`ApiTweet`**: Trait defining tweet-related operations
+- **`Error`**: Comprehensive error handling for various failure scenarios
+
+#### Key Design Principles
+
+1. **Async-First**: Built with Tokio for high-performance async operations
+2. **Type Safety**: Leverages Rust's type system for compile-time guarantees
+3. **Error Transparency**: Clear error types for different failure modes
+4. **Token Management**: Automatic token refresh with minimal user intervention
+5. **Modular Design**: Easy to extend with new API endpoints
 
 ## Support Me
 
@@ -110,7 +134,8 @@ We would like to extend our heartfelt gratitude to the following projects and co
 
 ## Additional Acknowledgements
 
-- TODO
+- [OAuth2 crate](https://crates.io/crates/oauth2) for providing excellent OAuth 2.0 implementation
+- X/Twitter Developer Community for API documentation and support
 
 <div align="right">
 

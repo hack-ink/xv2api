@@ -28,12 +28,15 @@ use reqwest::{
 // self
 use auth::Authenticator;
 
+/// Main API client for interacting with X/Twitter v2 API endpoints.
 #[derive(Clone, Debug)]
 pub struct Api {
+	/// OAuth 2.0 authenticator for managing bearer tokens.
 	pub authenticator: Authenticator,
 	http: Client,
 }
 impl Api {
+	/// Creates API client using credentials from environment variables.
 	pub fn from_env() -> Self {
 		let id = env::var("X_CLIENT_ID").expect("X_CLIENT_ID not set");
 		let secret = env::var("X_CLIENT_SECRET").expect("X_CLIENT_SECRET not set");
@@ -42,12 +45,14 @@ impl Api {
 		Self { authenticator, http: Client::new() }
 	}
 
+	/// Creates API client with provided OAuth 2.0 credentials.
 	pub fn new(id: String, secret: String) -> Self {
 		let authenticator = Authenticator::new(id, secret);
 
 		Self { authenticator, http: Client::new() }
 	}
 
+	/// Executes HTTP requests with automatic token refresh on authentication failure.
 	async fn execute_request<T>(
 		&self,
 		request_builder: impl Fn(&str) -> RequestBuilder,
@@ -64,9 +69,8 @@ impl Api {
 
 			// If 401 and this is the first attempt, refresh token and retry.
 			if status == 401 && attempt == 0 {
-				self.authenticator.clear_cached_token().await;
-
-				token = self.authenticator.refresh_bearer_token(&self.http).await?;
+				// Force refresh and update cache since current token is invalid
+				token = self.authenticator.refresh_and_cache(&self.http).await?;
 
 				continue;
 			}
@@ -79,6 +83,7 @@ impl Api {
 		unreachable!("loop must always return within 2 attempts; qed")
 	}
 
+	/// Handles HTTP response status codes and extracts response body text.
 	async fn handle_response(&self, response: Response) -> Result<String> {
 		let status = response.status();
 		let txt = response.text().await?;
@@ -111,6 +116,7 @@ impl Api {
 	// 	.await
 	// }
 
+	/// Sends POST requests with JSON body to API endpoints.
 	async fn post<B, T>(&self, url: &str, body: &B) -> Result<T>
 	where
 		B: Serialize,
@@ -155,18 +161,26 @@ impl Api {
 	// }
 }
 
+/// Response wrapper that can contain either successful data or API error information.
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 pub enum ApiResponse<T> {
+	/// Successful response containing the requested data.
 	Ok(T),
+	/// Error response containing API error details.
 	Err(ApiError),
 }
 
 #[derive(Debug, Deserialize)]
+/// API error response structure containing error details from X/Twitter API.
 pub struct ApiError {
+	/// Detailed description of the error that occurred.
 	pub detail: String,
+	/// HTTP status code associated with the error.
 	pub status: u32,
+	/// Brief title or category of the error.
 	pub title: String,
+	/// URI reference identifying the error type.
 	pub r#type: String,
 }
 impl Display for ApiError {

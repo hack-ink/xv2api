@@ -1,7 +1,7 @@
 //! X/Twitter OAuth 2.0 Authenticator
 
 // std
-use std::{env, fs, io, sync::Arc};
+use std::{env, io, sync::Arc};
 // crates.io
 use oauth2::{
 	AuthUrl, AuthorizationCode, ClientId, ClientSecret, CsrfToken, EmptyExtraTokenFields,
@@ -28,13 +28,18 @@ type OauthClient = oauth2::Client<
 	EndpointSet,
 >;
 
+/// OAuth 2.0 authenticator for X/Twitter API with token caching and refresh capabilities.
 #[derive(Debug, Clone)]
 pub struct Authenticator {
+	/// The configured OAuth 2.0 client for X/Twitter authentication.
 	oauth_client: OauthClient,
-	bearer_token: Arc<RwLock<Option<String>>>,
+	/// Optional refresh token loaded from environment variables.
 	refresh_token: Option<String>,
+	/// Cached bearer token protected by async read-write lock.
+	bearer_token: Arc<RwLock<Option<String>>>,
 }
 impl Authenticator {
+	/// Creates a new authenticator with client credentials and X/Twitter OAuth endpoints.
 	pub fn new(id: String, secret: String) -> Self {
 		let oauth_client = BasicClient::new(ClientId::new(id))
 			.set_client_secret(ClientSecret::new(secret))
@@ -53,25 +58,23 @@ impl Authenticator {
 
 		Self {
 			oauth_client,
-			bearer_token: Arc::new(RwLock::new(env::var("X_BEARER_TOKEN").ok())),
 			refresh_token: env::var("X_REFRESH_TOKEN").ok(),
+			bearer_token: Default::default(),
 		}
 	}
 
+	/// Obtains a bearer token by attempting refresh first, then falling back to interactive flow.
 	pub async fn request_bearer(&self, http: &Client) -> Result<String> {
-		// First, try to use the existing bearer token if available.
-		if let Some(bearer) = &*self.bearer_token.read().await {
-			return Ok(bearer.to_owned());
-		}
-		// If no bearer token, try to refresh using refresh token.
+		// Always try to refresh using refresh token first when program starts.
 		if let Ok(bearer) = self.refresh_bearer_token(http).await {
 			return Ok(bearer);
 		}
 
-		// No saved tokens or refresh failed, start interactive flow.
+		// No refresh token or refresh failed, start interactive flow.
 		self.interactive_flow(http).await
 	}
 
+	/// Refreshes the bearer token using the stored refresh token.
 	pub async fn refresh_bearer_token(&self, http: &Client) -> Result<String> {
 		let refresh_token = self
 			.oauth_client
@@ -82,14 +85,18 @@ impl Authenticator {
 			.await?;
 		let bearer_token = refresh_token.access_token().secret().to_owned();
 
-		self.update_tokens(
-			&bearer_token,
-			refresh_token.refresh_token().map(|r| r.secret().as_str()),
-		)?;
+		// Log the new refresh token if available, let user decide where to store it.
+		if let Some(new_refresh_token) = refresh_token.refresh_token() {
+			tracing::info!("🔄 new refresh token available: {}", new_refresh_token.secret());
+			tracing::info!("💡 consider updating your X_REFRESH_TOKEN environment variable");
+		}
+
+		tracing::info!("✅ successfully refreshed bearer token");
 
 		Ok(bearer_token)
 	}
 
+	/// Performs interactive OAuth flow requiring user to authorize in browser and enter code.
 	pub async fn interactive_flow(&self, http: &Client) -> Result<String> {
 		let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
 		let (auth_url, _csrf) = self
@@ -102,8 +109,8 @@ impl Authenticator {
 			.set_pkce_challenge(pkce_challenge)
 			.url();
 
-		println!("\n=== Zoauth 2.0 authorization ===");
-		println!("open this url in your browser and paste the returned code:\n{auth_url}\n");
+		tracing::info!("=== oauth 2.0 authorization ===");
+		tracing::info!("open this url in your browser and paste the returned code: {auth_url}");
 
 		let mut code = String::new();
 
@@ -123,63 +130,36 @@ impl Authenticator {
 			.await?;
 		let bearer_token = refresh_token.access_token().secret().to_owned();
 
-		self.update_tokens(
-			&bearer_token,
-			refresh_token.refresh_token().map(|r| r.secret().as_str()),
-		)?;
-
-		println!("✅ obtained bearer token {bearer_token}");
+		tracing::info!("✅ successfully obtained bearer token");
 
 		if let Some(refresh_token) = refresh_token.refresh_token() {
-			println!("x_refresh_token={}", refresh_token.secret());
+			tracing::info!("🔑 refresh token: {}", refresh_token.secret());
+			tracing::info!(
+				"💡 save this refresh token to your X_REFRESH_TOKEN environment variable for future use"
+			);
 		}
 
 		Ok(bearer_token)
 	}
 
-	fn update_tokens(&self, bearer_token: &str, refresh_token: Option<&str>) -> Result<()> {
-		let path = ".env";
-		let mut lines: Vec<String> =
-			fs::read_to_string(path).unwrap_or_default().lines().map(|l| l.to_string()).collect();
-		let mut ensure = |key: &str, val: &str| {
-			if let Some(idx) = lines.iter().position(|l| l.starts_with(&format!("export {key}="))) {
-				lines[idx] = format!("export {key}={val}");
-			} else {
-				lines.push(format!("export {key}={val}"));
-			}
-		};
-
-		ensure("X_BEARER_TOKEN", bearer_token);
-
-		if let Some(r) = refresh_token {
-			ensure("X_REFRESH_TOKEN", r);
-		}
-
-		fs::write(path, lines.join("\n") + "\n")?;
-
-		Ok(())
-	}
-
+	/// Returns cached bearer token or triggers authentication flow if none exists.
 	pub async fn authenticate(&self, http: &Client) -> Result<String> {
 		// Check if we have a cached token first.
 		if let Some(bearer) = &*self.bearer_token.read().await {
 			return Ok(bearer.to_owned());
 		}
 
-		// No cached token, get a new one.
-		let bearer = self.request_bearer(http).await?;
-
-		// Cache the token.
-		{
-			let mut cached = self.bearer_token.write().await;
-
-			*cached = Some(bearer.clone());
-		}
-
-		Ok(bearer)
+		self.refresh_and_cache(http).await
 	}
 
-	pub async fn clear_cached_token(&self) {
-		self.bearer_token.write().await.take();
+	/// Refreshes and caches a new bearer token with write lock protection.
+	pub async fn refresh_and_cache(&self, http: &Client) -> Result<String> {
+		// Acquire write lock to prevent multiple simultaneous token requests.
+		let mut cached = self.bearer_token.write().await;
+		let bearer = self.request_bearer(http).await?;
+
+		*cached = Some(bearer.clone());
+
+		Ok(bearer)
 	}
 }

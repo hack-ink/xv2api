@@ -8,7 +8,7 @@ name        = "xv2api"
 readme      = "README.md"
 repository  = "https://github.com/hack-ink/xv2api"
 resolver    = "3"
-version     = "0.1.0"
+version     = "0.1.1"
 
 [profile.ci-dev]
 incremental = false

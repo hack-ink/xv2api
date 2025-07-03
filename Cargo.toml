@@ -25,6 +25,6 @@ reqwest     = { version = "0.12", default-features = false, features = ["charset
 serde       = { version = "1.0" }
 serde_json  = { version = "1.0" }
 thiserror   = { version = "2.0" }
-tokio       = { version = "1.45", features = ["macros", "rt-multi-thread"] }
+tokio       = { version = "1.46", features = ["macros", "rt-multi-thread"] }
 tracing     = { version = "0.1" }
 urlencoding = { version = "2.1" }
